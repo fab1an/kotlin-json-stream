@@ -1,0 +1,36 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform' version '1.8.10'
+    id("maven-publish")
+}
+
+group 'com.fab1an'
+version '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+    ios()
+    macosX64()
+    jvm {
+        testRuns["test"].executionTask.configure {
+            useJUnitPlatform()
+        }
+    }
+    js(IR) {
+        nodejs()
+    }
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation "com.squareup.okio:okio:3.3.0"
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation kotlin("test")
+            }
+        }
+    }
+}
