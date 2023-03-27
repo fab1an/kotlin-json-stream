@@ -1,10 +1,10 @@
 plugins {
     id 'org.jetbrains.kotlin.multiplatform' version '1.8.10'
-    id("maven-publish")
+    id("convention.publication")
 }
 
 group 'com.fab1an'
-version '1.0.0-SNAPSHOT'
+version '1.0.0'
 
 repositories {
     mavenCentral()
@@ -34,3 +34,4 @@ kotlin {
         }
     }
 }
+
