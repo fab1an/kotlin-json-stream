@@ -2,6 +2,8 @@ name: Dokka HTML to pages
 
 on:
   push:
+    branches:
+      - master
     tags:
       - 'v[0-9]+\.[0-9]+\.[0-9]+'
 
