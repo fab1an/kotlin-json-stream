@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.fab1an'
-version '1.0.1-SNAPHOT'
+version '1.0.0'
 
 repositories {
     mavenCentral()
