@@ -20,7 +20,7 @@ class JsonReader(private val source: BufferedSource) {
         }
         stack.add(OpenToken.BEGIN_ARRAY)
 
-        consumeSpecific('[')
+        consumeSpecific(BYTESTRING_SQUAREBRACKET_OPEN)
         consumeWhitespace()
     }
 
@@ -33,7 +33,7 @@ class JsonReader(private val source: BufferedSource) {
         }
         stack.add(OpenToken.BEGIN_OBJECT)
 
-        consumeSpecific('{')
+        consumeSpecific(BYTESTRING_CURLYBRACKET_OPEN)
         consumeWhitespace()
     }
 
@@ -47,7 +47,7 @@ class JsonReader(private val source: BufferedSource) {
         }
         stack.removeLast()
 
-        consumeSpecific(']')
+        consumeSpecific(BYTESTRING_SQUAREBRACKET_CLOSE)
         consumeWhitespaceAndOptionalComma()
     }
 
@@ -57,7 +57,7 @@ class JsonReader(private val source: BufferedSource) {
         }
         stack.removeLast()
 
-        consumeSpecific('}')
+        consumeSpecific(BYTESTRING_CURLYBRACKET_CLOSE)
         consumeWhitespaceAndOptionalComma()
     }
 
@@ -74,12 +74,12 @@ class JsonReader(private val source: BufferedSource) {
 
         /* value */
         val boolVal = when {
-            source.nextIs("true") -> {
+            source.nextIs(BYTESTRING_TRUE) -> {
                 source.skip(4)
                 true
             }
 
-            source.nextIs("false") -> {
+            source.nextIs(BYTESTRING_FALSE) -> {
                 source.skip(5)
                 false
             }
@@ -101,7 +101,7 @@ class JsonReader(private val source: BufferedSource) {
         val partBeforeComma = source.readDecimalLong()
 
         var partAfterComma: Long? = null
-        if (source.nextIs('.')) {
+        if (source.nextIs(BYTESTRING_DOT)) {
             source.skip(1)
             partAfterComma = source.readDecimalLong()
         }
@@ -109,11 +109,11 @@ class JsonReader(private val source: BufferedSource) {
         /* whitespace and comma */
         consumeWhitespaceAndOptionalComma()
 
-        if (partAfterComma == null) {
-            return partBeforeComma.toDouble()
+        return if (partAfterComma == null) {
+            partBeforeComma.toDouble()
 
         } else {
-            return "$partBeforeComma.$partAfterComma".toDouble()
+            "$partBeforeComma.$partAfterComma".toDouble()
         }
     }
 
@@ -148,18 +148,18 @@ class JsonReader(private val source: BufferedSource) {
         stack.add(OpenToken.BEGIN_PROPERTY)
 
         /* opening quote */
-        consumeSpecific('"')
+        consumeSpecific(BYTESTRING_DOUBLEQUOTE)
 
         /* property name */
-        val indexOfEnd = source.indexOf(ByteString.of('"'.code.toByte()))
+        val indexOfEnd = source.indexOf(BYTESTRING_DOUBLEQUOTE)
         val name = source.readUtf8(indexOfEnd)
 
         /* closing quote */
-        consumeSpecific('"')
+        consumeSpecific(BYTESTRING_DOUBLEQUOTE)
 
         /* colon and whitespace */
         consumeWhitespace()
-        consumeSpecific(':')
+        consumeSpecific(BYTESTRING_COLON)
         consumeWhitespace()
 
         return name
@@ -174,20 +174,20 @@ class JsonReader(private val source: BufferedSource) {
         expectValue()
 
         /* opening quote */
-        consumeSpecific('"')
+        consumeSpecific(BYTESTRING_DOUBLEQUOTE)
 
         /* string value */
         val value = StringBuilder()
         while (!source.exhausted()) {
-            if (source.nextIs("""\"""")) {
+            if (source.nextIs(BYTESTRING_ESCAPED_DOUBLE_DASH)) {
                 source.skip(2)
                 value.append('"')
 
-            } else if (source.nextIs("""\\""")) {
+            } else if (source.nextIs(BYTESTRING_ESCAPED_FORWARD_SLASH)) {
                 source.skip(2)
                 value.append('\\')
 
-            } else if (!source.nextIs('"')) {
+            } else if (!source.nextIs(BYTESTRING_DOUBLEQUOTE)) {
                 value.append(source.readUtf8CodePoint().toChar())
 
             } else {
@@ -196,7 +196,7 @@ class JsonReader(private val source: BufferedSource) {
         }
 
         /* closing quote */
-        consumeSpecific('"')
+        consumeSpecific(BYTESTRING_DOUBLEQUOTE)
 
         /* whitespace and comma */
         consumeWhitespaceAndOptionalComma()
@@ -207,15 +207,15 @@ class JsonReader(private val source: BufferedSource) {
     fun peek(): JsonToken {
         return when {
             source.exhausted() -> JsonToken.END_DOCUMENT
-            stack.lastOrNull() in setOf(OpenToken.BEGIN_OBJECT) && source.nextIs('"') -> JsonToken.NAME
-            source.nextIs('"') -> JsonToken.STRING
-            source.nextIs('{') -> JsonToken.BEGIN_OBJECT
-            source.nextIs('}') -> JsonToken.END_OBJECT
-            source.nextIs('[') -> JsonToken.BEGIN_ARRAY
-            source.nextIs(']') -> JsonToken.END_ARRAY
-            source.nextIs("null") -> JsonToken.NULL
-            source.nextIs("true") -> JsonToken.BOOLEAN
-            source.nextIs("false") -> JsonToken.BOOLEAN
+            stack.lastOrNull() in setOf(OpenToken.BEGIN_OBJECT) && source.nextIs(BYTESTRING_DOUBLEQUOTE) -> JsonToken.NAME
+            source.nextIs(BYTESTRING_DOUBLEQUOTE) -> JsonToken.STRING
+            source.nextIs(BYTESTRING_CURLYBRACKET_OPEN) -> JsonToken.BEGIN_OBJECT
+            source.nextIs(BYTESTRING_CURLYBRACKET_CLOSE) -> JsonToken.END_OBJECT
+            source.nextIs(BYTESTRING_SQUAREBRACKET_OPEN) -> JsonToken.BEGIN_ARRAY
+            source.nextIs(BYTESTRING_SQUAREBRACKET_CLOSE) -> JsonToken.END_ARRAY
+            source.nextIs(BYTESTRING_NULL) -> JsonToken.NULL
+            source.nextIs(BYTESTRING_TRUE) -> JsonToken.BOOLEAN
+            source.nextIs(BYTESTRING_FALSE) -> JsonToken.BOOLEAN
             source.nextIsAsciiDigit() -> JsonToken.NUMBER
             else -> error("unknown next token: '${source.readUtf8CodePoint().toChar()}'")
         }
@@ -275,7 +275,7 @@ class JsonReader(private val source: BufferedSource) {
 
         /* whitespace and comma */
         consumeWhitespace()
-        if (source.nextIs(',')) {
+        if (source.nextIs(BYTESTRING_COMMA)) {
             source.skip(1)
             consumeWhitespace()
 
@@ -295,12 +295,14 @@ class JsonReader(private val source: BufferedSource) {
         }
     }
 
-    private fun consumeSpecific(char: Char) {
-        check(!source.exhausted()) { "source is exhausted" }
-        check(source.nextIs(char)) {
-            "'$char' expected, but got: '${source.readUtf8CodePoint().toChar()}'"
+    private fun consumeSpecific(byteString: ByteString) {
+        check(!source.exhausted()) {
+            "'${byteString.utf8()}' expected, source is exhausted"
         }
-        source.readUtf8CodePoint()
+        check(source.nextIs(byteString)) {
+            "'${byteString.utf8()}' expected, but got: '${source.readUtf8CodePoint().toChar()}'"
+        }
+        source.skip(1)
     }
 
     private enum class OpenToken {
