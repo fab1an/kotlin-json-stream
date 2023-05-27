@@ -12,7 +12,7 @@ class JsonReader(private val source: BufferedSource) {
     }
 
     fun beginArray() {
-        check(stack.lastOrNull() in setOf(OpenToken.BEGIN_ARRAY, OpenToken.BEGIN_PROPERTY, null)) {
+        check(stack.lastOrNull() in SET_BEGIN_ARRAY_BEGIN_PROPERTY_NULL) {
             stack.lastOrNull() ?: "empty"
         }
         if (stack.lastOrNull() == OpenToken.BEGIN_PROPERTY) {
@@ -25,7 +25,7 @@ class JsonReader(private val source: BufferedSource) {
     }
 
     fun beginObject() {
-        check(stack.lastOrNull() in setOf(OpenToken.BEGIN_ARRAY, OpenToken.BEGIN_PROPERTY, null)) {
+        check(stack.lastOrNull() in SET_BEGIN_ARRAY_BEGIN_PROPERTY_NULL) {
             stack.lastOrNull() ?: "empty"
         }
         if (stack.lastOrNull() == OpenToken.BEGIN_PROPERTY) {
@@ -207,7 +207,7 @@ class JsonReader(private val source: BufferedSource) {
     fun peek(): JsonToken {
         return when {
             source.exhausted() -> JsonToken.END_DOCUMENT
-            stack.lastOrNull() in setOf(OpenToken.BEGIN_OBJECT) && source.nextIs(BYTESTRING_DOUBLEQUOTE) -> JsonToken.NAME
+            stack.lastOrNull() == OpenToken.BEGIN_OBJECT && source.nextIs(BYTESTRING_DOUBLEQUOTE) -> JsonToken.NAME
             source.nextIs(BYTESTRING_DOUBLEQUOTE) -> JsonToken.STRING
             source.nextIs(BYTESTRING_CURLYBRACKET_OPEN) -> JsonToken.BEGIN_OBJECT
             source.nextIs(BYTESTRING_CURLYBRACKET_CLOSE) -> JsonToken.END_OBJECT
@@ -222,7 +222,7 @@ class JsonReader(private val source: BufferedSource) {
     }
 
     fun skipValue() {
-        check(stack.lastOrNull() in setOf(OpenToken.BEGIN_PROPERTY, OpenToken.BEGIN_ARRAY)) {
+        check(stack.lastOrNull() in SET_BEGIN_ARRAY_BEGIN_PROPERTY) {
             stack.lastOrNull() ?: "empty"
         }
 
@@ -263,7 +263,7 @@ class JsonReader(private val source: BufferedSource) {
     }
 
     private fun expectValue() {
-        check(stack.lastOrNull() in setOf(OpenToken.BEGIN_PROPERTY, OpenToken.BEGIN_ARRAY)) {
+        check(stack.lastOrNull() in SET_BEGIN_ARRAY_BEGIN_PROPERTY) {
             stack.lastOrNull() ?: "empty stack"
         }
         if (stack.lastOrNull() == OpenToken.BEGIN_PROPERTY) {
@@ -309,5 +309,10 @@ class JsonReader(private val source: BufferedSource) {
         BEGIN_OBJECT,
         BEGIN_ARRAY,
         BEGIN_PROPERTY
+    }
+
+    companion object {
+        private val SET_BEGIN_ARRAY_BEGIN_PROPERTY_NULL = setOf(OpenToken.BEGIN_ARRAY, OpenToken.BEGIN_PROPERTY, null)
+        private val SET_BEGIN_ARRAY_BEGIN_PROPERTY = setOf(OpenToken.BEGIN_ARRAY, OpenToken.BEGIN_PROPERTY)
     }
 }
