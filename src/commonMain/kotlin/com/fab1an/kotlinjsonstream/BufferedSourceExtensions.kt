@@ -18,8 +18,8 @@ private val BYTESTRING_HYPHEN = ByteString.of('-'.code.toByte())
 
 private val BYTESTRING_TAB = ByteString.of('\t'.code.toByte())
 private val BYTESTRING_CARRIAGE_RETURN = ByteString.of('\r'.code.toByte())
-private val BYTESTRING_NEWLINE = ByteString.of('\n'.code.toByte())
-private val BYTESTRING_SPACE = ByteString.of(' '.code.toByte())
+internal val BYTESTRING_NEWLINE = ByteString.of('\n'.code.toByte())
+internal val BYTESTRING_SPACE = ByteString.of(' '.code.toByte())
 
 internal val BYTESTRING_SQUAREBRACKET_OPEN = ByteString.of('['.code.toByte())
 internal val BYTESTRING_SQUAREBRACKET_CLOSE = ByteString.of(']'.code.toByte())
@@ -32,7 +32,7 @@ internal val BYTESTRING_COMMA = ByteString.of(','.code.toByte())
 internal val BYTESTRING_TRUE = "true".encodeUtf8()
 internal val BYTESTRING_FALSE = "false".encodeUtf8()
 internal val BYTESTRING_NULL = "null".encodeUtf8()
-internal val BYTESTRING_ESCAPED_DOUBLE_DASH = """\"""".encodeUtf8()
+internal val BYTESTRING_ESCAPED_DOUBLEQUOTE = """\"""".encodeUtf8()
 internal val BYTESTRING_ESCAPED_FORWARD_SLASH = """\\""".encodeUtf8()
 
 internal fun BufferedSource.nextIsAsciiDigit(): Boolean {
