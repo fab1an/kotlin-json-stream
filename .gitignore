@@ -4,4 +4,5 @@ build
 .idea
 *.swp
 local.properties
+TODO.txt
 
