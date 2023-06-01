@@ -1,4 +1,4 @@
-name: Dokka HTML to pages
+name: Build
 
 on:
   push:
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -28,6 +28,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: "gradle"
+      - name: Build
+        run: ./gradlew build
       - name: Build documentation
         run: ./gradlew dokkaHtml
       - uses: actions/configure-pages@v3
