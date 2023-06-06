@@ -1,9 +1,26 @@
 package com.fab1an.kotlinjsonstream
 
+import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 
+/**
+ * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
+ * encoded value as a stream of tokens. This stream includes both literal
+ * values (strings, numbers, booleans, and nulls) as well as the begin and
+ * end delimiters of objects and arrays. The tokens are traversed in
+ * depth-first order, the same order that they appear in the JSON document.
+ *
+ * @constructor Creates a new instance that reads a JSON-encoded stream from [source].
+ */
 class JsonReader(private val source: BufferedSource) {
+
+    /**
+     * Creates a new instance that reads a JSON-encoded stream from [jsonStr].
+     */
+    constructor(jsonStr: String) : this(
+        Buffer().apply { write(jsonStr.encodeToByteArray()) }
+    )
 
     private val stack = mutableListOf<OpenToken>()
 
@@ -11,6 +28,9 @@ class JsonReader(private val source: BufferedSource) {
         consumeWhitespace()
     }
 
+    /**
+     * Consumes the next token from the JSON stream and asserts that it is the beginning of a new array.
+     */
     fun beginArray() {
         beginArrayOrObject()
         stack.add(OpenToken.BEGIN_ARRAY)
@@ -33,6 +53,9 @@ class JsonReader(private val source: BufferedSource) {
     }
 
 
+    /**
+     * Consumes the next token from the JSON stream and asserts that it is the beginning of a new object.
+     */
     fun beginObject() {
         beginArrayOrObject()
         stack.add(OpenToken.BEGIN_OBJECT)
@@ -41,10 +64,16 @@ class JsonReader(private val source: BufferedSource) {
         consumeWhitespace()
     }
 
+    /**
+     * Closes the underlying source.
+     */
     fun close() {
         source.close()
     }
 
+    /**
+     * Consumes the next token from the JSON stream and asserts that it is the end of the current array.
+     */
     fun endArray() {
         check(stack.lastOrNull() == OpenToken.BEGIN_ARRAY) {
             stack.lastOrNull() ?: "empty"
@@ -55,6 +84,9 @@ class JsonReader(private val source: BufferedSource) {
         consumeWhitespaceAndOptionalComma()
     }
 
+    /**
+     * Consumes the next token from the JSON stream and asserts that it is the end of the current object.
+     */
     fun endObject() {
         check(stack.lastOrNull() == OpenToken.BEGIN_OBJECT) {
             stack.lastOrNull() ?: "empty"
@@ -65,6 +97,9 @@ class JsonReader(private val source: BufferedSource) {
         consumeWhitespaceAndOptionalComma()
     }
 
+    /**
+     * Returns true if the current array or object has another element
+     */
     fun hasNext(): Boolean {
         return when (stack.lastOrNull()) {
             OpenToken.BEGIN_OBJECT -> peek() != JsonToken.END_OBJECT
@@ -73,6 +108,9 @@ class JsonReader(private val source: BufferedSource) {
         }
     }
 
+    /**
+     * Returns the Boolean value of the next token, consuming it.
+     */
     fun nextBoolean(): Boolean {
         expectValue()
 
@@ -98,6 +136,9 @@ class JsonReader(private val source: BufferedSource) {
         return boolVal
     }
 
+    /**
+     * Returns the [Double] value of the next token, consuming it.
+     */
     fun nextDouble(): Double {
         expectValue()
 
@@ -121,6 +162,9 @@ class JsonReader(private val source: BufferedSource) {
         }
     }
 
+    /**
+     * Returns the Int value of the next token, consuming it.
+     */
     fun nextInt(): Int {
         expectValue()
 
@@ -133,6 +177,9 @@ class JsonReader(private val source: BufferedSource) {
         return value.toInt()
     }
 
+    /**
+     * Returns the Long value of the next token, consuming it.
+     */
     fun nextLong(): Long {
         expectValue()
 
@@ -145,6 +192,9 @@ class JsonReader(private val source: BufferedSource) {
         return value
     }
 
+    /**
+     * Returns the name of the next property, consuming it and asserting that this reader is inside an object.
+     */
     fun nextName(): String {
         check(stack.lastOrNull() == OpenToken.BEGIN_OBJECT) {
             stack.lastOrNull() ?: "empty"
@@ -169,11 +219,17 @@ class JsonReader(private val source: BufferedSource) {
         return name
     }
 
+    /**
+     * Asserts that the next property-value or array-item is null and consumes the token.
+     */
     fun nextNull() {
         check(peek() == JsonToken.NULL)
         source.skip(4)
     }
 
+    /**
+     * Returns the String of the next token, consuming it.
+     */
     fun nextString(): String {
         expectValue()
 
@@ -208,6 +264,9 @@ class JsonReader(private val source: BufferedSource) {
         return value.toString()
     }
 
+    /**
+     * Returns the next token without consuming it.
+     */
     fun peek(): JsonToken {
         return when {
             source.exhausted() -> JsonToken.END_DOCUMENT
@@ -225,6 +284,9 @@ class JsonReader(private val source: BufferedSource) {
         }
     }
 
+    /**
+     * Skips the next value recursively. This method asserts it is inside an array or inside an object.
+     */
     fun skipValue() {
         check(stack.lastOrNull().let {
             it == OpenToken.BEGIN_ARRAY
