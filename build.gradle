@@ -1,24 +1,30 @@
 import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
-    id 'org.jetbrains.kotlin.multiplatform' version "1.8.22"
+    id 'org.jetbrains.kotlin.multiplatform' version "1.9.0"
     id("convention.publication")
-    id "org.jetbrains.dokka" version "1.8.22"
+    id "org.jetbrains.dokka" version "1.8.20"
+    id "maven-publish"
 }
 
 group 'com.fab1an'
-version '1.0.0'
+version '1.0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
 kotlin {
+    targetHierarchy.default()
+    mingwX64()
     ios()
     macosX64()
     jvm {
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
+        }
+        compilations.main {
+            kotlinOptions.jvmTarget = "1.8"
         }
     }
     js(IR) {
@@ -27,7 +33,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation "com.squareup.okio:okio:3.3.0"
+                implementation "com.squareup.okio:okio:3.4.0"
             }
         }
         commonTest {
