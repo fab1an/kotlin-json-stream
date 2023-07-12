@@ -4,7 +4,6 @@ plugins {
     id 'org.jetbrains.kotlin.multiplatform' version "1.9.0"
     id("convention.publication")
     id "org.jetbrains.dokka" version "1.8.20"
-    id "maven-publish"
 }
 
 group 'com.fab1an'
@@ -46,6 +45,10 @@ kotlin {
     }
 }
 
+dependencies {
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.8.20")
+}
+
 tasks.withType(DokkaTask.class) {
     dokkaSourceSets {
         configureEach {
@@ -54,5 +57,14 @@ tasks.withType(DokkaTask.class) {
                 packageListUrl.set(new URL("https://square.github.io/okio/3.x/okio/okio/package-list"))
             }
         }
+
     }
+    String versioningPluginConfiguration = """
+    {
+      "olderVersionsDir": "${projectDir.toPath().resolve("documentation")}"
+    }
+    """
+    pluginsMapConfiguration.set(
+            ["org.jetbrains.dokka.versioning.VersioningPlugin": versioningPluginConfiguration]
+    )
 }
