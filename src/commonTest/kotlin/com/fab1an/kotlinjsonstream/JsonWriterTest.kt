@@ -16,8 +16,6 @@ class JsonWriterTest {
             value("item1")
             endArray()
             endObject()
-
-            close()
         }
 
         buffer.readUtf8() shouldEqual """
@@ -40,6 +38,54 @@ class JsonWriterTest {
         buffer.readUtf8() shouldEqual """
             {"name":null}
         """.trimIndent()
+    }
+
+    @Test
+    fun valueDirectlyInObject() {
+        assertFailsWith<IllegalStateException> {
+            val buffer = Buffer()
+
+            JsonWriter(buffer).apply {
+                beginObject()
+                value("")
+            }
+        }
+    }
+
+    @Test
+    fun quoteInScript() {
+        val buffer = Buffer()
+
+        JsonWriter(buffer).apply {
+            beginObject()
+            name("string").value("a \" quote")
+            endObject()
+        }
+
+        buffer.readUtf8() shouldEqual """
+            {"string":"a \" quote"}
+        """.trimIndent()
+    }
+
+    @Test
+    fun escapeString() {
+        val stringWithEscapeSequences = "Escaped: \",\\,/,\b,\u000c,\n,\r,\t,\u0000,\uFFFF"
+
+        val buffer = Buffer()
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(stringWithEscapeSequences)
+            endArray()
+        }
+
+        val jsonString = buffer.readUtf8()
+        jsonString shouldEqual """["Escaped: \",\\,\/,\b,\f,\n,\r,\t,${"\u0000"},${"\uFFFF"}"]"""
+
+        JsonReader(jsonString).apply {
+            beginArray()
+            nextString() shouldEqual stringWithEscapeSequences
+            endArray()
+        }
     }
 
     @Test
@@ -69,33 +115,6 @@ class JsonWriterTest {
 
         buffer.readUtf8() shouldEqual """
             [1]
-        """.trimIndent()
-    }
-
-    @Test
-    fun valueDirectlyInObject() {
-        assertFailsWith<IllegalStateException> {
-            val buffer = Buffer()
-
-            JsonWriter(buffer).apply {
-                beginObject()
-                value("")
-            }
-        }
-    }
-
-    @Test
-    fun quoteInScript() {
-        val buffer = Buffer()
-
-        JsonWriter(buffer).apply {
-            beginObject()
-            name("string").value("a \" quote")
-            endObject()
-        }
-
-        buffer.readUtf8() shouldEqual """
-            {"string":"a \" quote"}
         """.trimIndent()
     }
 }

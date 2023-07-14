@@ -171,7 +171,17 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         expectValue()
         if (value != null) {
             sink.write(BYTESTRING_DOUBLEQUOTE)
-            sink.writeUtf8(value.replace("\"", "\\\""))
+            sink.writeUtf8(
+                value
+                    .replace("\\", """\\""")
+                    .replace("\"", """\"""")
+                    .replace("/", """\/""")
+                    .replace("\b", """\b""")
+                    .replace("\u000c", """\f""")
+                    .replace("\n", """\n""")
+                    .replace("\r", """\r""")
+                    .replace("\t", """\t""")
+            )
             sink.write(BYTESTRING_DOUBLEQUOTE)
         } else {
             sink.write(BYTESTRING_NULL)
