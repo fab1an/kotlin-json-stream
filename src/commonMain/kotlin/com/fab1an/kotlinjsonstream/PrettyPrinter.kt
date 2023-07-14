@@ -12,6 +12,11 @@ import com.fab1an.kotlinjsonstream.JsonToken.NUMBER
 import com.fab1an.kotlinjsonstream.JsonToken.STRING
 import okio.Buffer
 
+/**
+ * Convenience function for pretty-printing a json-String.
+ *
+ * @param jsonStr the String to be pretty-printed.
+ */
 fun prettyPrintJson(jsonStr: String): String {
     val sink = Buffer()
     val writer = JsonWriter(sink, prettyPrint = true)

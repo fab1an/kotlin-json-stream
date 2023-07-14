@@ -16,6 +16,8 @@ class JsonWriterTest {
             value("item1")
             endArray()
             endObject()
+
+            close()
         }
 
         buffer.readUtf8() shouldEqual """
@@ -37,6 +39,36 @@ class JsonWriterTest {
 
         buffer.readUtf8() shouldEqual """
             {"name":null}
+        """.trimIndent()
+    }
+
+    @Test
+    fun writeDoubleZero() {
+        val buffer = Buffer()
+
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(0.0)
+            endArray()
+        }
+
+        buffer.readUtf8() shouldEqual """
+            [0]
+        """.trimIndent()
+    }
+
+    @Test
+    fun writeLong() {
+        val buffer = Buffer()
+
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(1L)
+            endArray()
+        }
+
+        buffer.readUtf8() shouldEqual """
+            [1]
         """.trimIndent()
     }
 

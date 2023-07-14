@@ -2,11 +2,23 @@ package com.fab1an.kotlinjsonstream
 
 import okio.BufferedSink
 
+/**
+ * Writes a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
+ * encoded value to a stream. This stream includes both literal
+ * values (strings, numbers, booleans, and nulls) as well as the begin and
+ * end delimiters of objects and arrays.
+ *
+ * @constructor Creates a new instance that reads a JSON-encoded stream to [sink]. If [prettyPrint] is enabled
+ *              the output is formatted with indents, spaces and newlines.
+ */
 class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = false) {
 
     private val stack = mutableListOf<OpenToken>()
     private var curIndent = 0
 
+    /**
+     * Begins a new array.
+     */
     fun beginArray(): JsonWriter {
         expectValue()
         sink.write(BYTESTRING_SQUAREBRACKET_OPEN)
@@ -18,6 +30,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Begins a new object.
+     */
     fun beginObject(): JsonWriter {
         expectValue()
         sink.write(BYTESTRING_CURLYBRACKET_OPEN)
@@ -29,10 +44,16 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Closes the underlying [sink].
+     */
     fun close() {
         sink.close()
     }
 
+    /**
+     * Ends the current array.
+     */
     fun endArray(): JsonWriter {
         check(stack.lastOrNull().let { it == OpenToken.BEGIN_ARRAY || it == OpenToken.CONTINUE_ARRAY }) {
             stack.lastOrNull() ?: "empty"
@@ -48,6 +69,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Ends the current object.
+     */
     fun endObject(): JsonWriter {
         check(stack.lastOrNull().let { it == OpenToken.BEGIN_OBJECT || it == OpenToken.CONTINUE_OBJECT }) {
             stack.lastOrNull() ?: "empty"
@@ -63,6 +87,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Begins a new property in the current object, by setting its [name].
+     */
     fun name(name: String): JsonWriter {
         check(stack.lastOrNull().let { it == OpenToken.BEGIN_OBJECT || it == OpenToken.CONTINUE_OBJECT }) {
             stack.lastOrNull() ?: "empty"
@@ -89,6 +116,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Writes [value].
+     */
     fun value(value: Boolean): JsonWriter {
         expectValue()
         if (value) {
@@ -100,6 +130,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Writes [value].
+     */
     fun value(value: Double): JsonWriter {
         expectValue()
         if (value.rem(1) == 0.0) {
@@ -112,19 +145,28 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Writes [value].
+     */
     fun value(value: Long): JsonWriter {
         expectValue()
-        sink.writeLong(value)
+        sink.writeUtf8(value.toString())
 
         return this
     }
 
+    /**
+     * Writes [value].
+     */
     fun value(value: Int): JsonWriter {
         expectValue()
         sink.writeUtf8(value.toString())
         return this
     }
 
+    /**
+     * Writes [value].
+     */
     fun value(value: String?): JsonWriter {
         expectValue()
         if (value != null) {
@@ -137,6 +179,9 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
         return this
     }
 
+    /**
+     * Writes `null`.
+     */
     fun nullValue(): JsonWriter {
         expectValue()
 

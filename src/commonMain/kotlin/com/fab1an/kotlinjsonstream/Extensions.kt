@@ -1,7 +1,7 @@
 package com.fab1an.kotlinjsonstream
 
 /**
- * Writes a [list] of [E] to this [JsonWriter], using the supplied [writerFn].
+ * Writes the [list] of [E] to this [JsonWriter], using the supplied [writerFn].
  *
  * @param E the type of the objects
  * @param list the list of objects
@@ -14,7 +14,7 @@ inline fun <E : Any> JsonWriter.value(list: List<E>, writerFn: JsonWriter.(E) ->
 }
 
 /**
- * Reads a [list] of [E] from this [JsonReader]. This function assumes it is called at the start
+ * Reads a [List] of [E] from this [JsonReader]. This function assumes it is called at the start
  * of a JSON-array and reads each element using the supplied [readerFn].
  *
  * @param E the type of the objects
@@ -34,7 +34,7 @@ inline fun <E : Any> JsonReader.nextList(readerFn: JsonReader.() -> E): List<E> 
 }
 
 /**
- * Writes a [set] of [E] to this [JsonWriter], using the supplied [writerFn].
+ * Writes the [set] of [E] to this [JsonWriter], using the supplied [writerFn].
  *
  * @param E the type of the objects
  * @param set the set of objects
@@ -47,7 +47,7 @@ inline fun <E : Any> JsonWriter.value(set: Set<E>, writerFn: JsonWriter.(E) -> U
 }
 
 /**
- * Reads a [set] of [E] from this [JsonReader]. This function assumes it is called at the start
+ * Reads a [Set] of [E] from this [JsonReader]. This function assumes it is called at the start
  * of a JSON-array and reads each element using the supplied [readerFn].
  *
  * @param E the type of the objects
