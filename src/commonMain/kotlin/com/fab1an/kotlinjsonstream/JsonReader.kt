@@ -8,6 +8,7 @@ import com.fab1an.kotlinjsonstream.JsonReader.OpenToken.CONTINUE_OBJECT
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
@@ -121,21 +122,27 @@ class JsonReader(private val source: BufferedSource) {
         expectValue()
 
         /* first part value */
-        val partBeforeComma = source.readDecimalLong()
+        val nextStop = source.indexOfElement("}], \t\r\n".encodeUtf8())
+        check(nextStop > 0) { "document ended prematurely" }
 
-        return if (source.nextIs(BYTESTRING_DOT)) {
-            source.skip(1)
-            val partAfterComma = source.readDecimalLong()
-            if (skipDouble)
-                null
-            else
-                "$partBeforeComma.$partAfterComma".toDouble()
+        val numberText = source.readUtf8(nextStop)
+        when {
+            numberText.startsWith(".") -> throw NumberFormatException("invalid number: '$numberText'")
+            !numberText.all {
+                (it == '.' || it == 'E' || it == 'e' || it == '+' || it == '-' || (it in '0'..'9'))
+            } -> {
+                throw NumberFormatException("invalid number: '$numberText'")
+            }
 
-        } else {
-            if (skipDouble)
-                null
-            else
-                partBeforeComma.toDouble()
+            numberText.startsWith("-00") -> throw NumberFormatException("invalid number: '$numberText'")
+            numberText.startsWith("00") -> throw NumberFormatException("invalid number: '$numberText'")
+            else -> {
+                val doubleValue = numberText.toDouble()
+                return if (skipDouble)
+                    null
+                else
+                    doubleValue
+            }
         }
     }
 
@@ -228,7 +235,7 @@ class JsonReader(private val source: BufferedSource) {
 
             /* read until backslash or double quote */
             val nextStop = source.indexOfElement(BYTESTRING_BACKSLASH_OR_DOUBLEQUOTE)
-            check(nextStop >= 0) { "string ended prematurely" }
+            check(nextStop >= 0) { "document ended prematurely" }
 
             if (buffer != null)
                 buffer.write(source, nextStop)

@@ -34,7 +34,6 @@ class JsonReaderTest {
     }
 
     @Test
-    @Ignore
     fun readExponents() {
         val json = JsonReader("""[1.0E+2,1.0e+2,1E+0,1.2E-2]""")
 
@@ -47,7 +46,6 @@ class JsonReaderTest {
     }
 
     @Test
-    @Ignore
     fun errorOnInvalidNumber() {
         JsonReader("""[.1]""").apply {
             beginArray()
