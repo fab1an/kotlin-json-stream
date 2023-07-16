@@ -1,4 +1,5 @@
 build
+secring.gpg
 .gradle
 .DS_Store
 .idea
