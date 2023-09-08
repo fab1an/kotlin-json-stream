@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'com.fab1an'
-version '1.1.1-SNAPSHOT'
+version '1.1.1'
 
 repositories {
     mavenCentral()
