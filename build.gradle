@@ -21,11 +21,12 @@ kotlin {
     macosX64()
     linuxX64()
     jvm {
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-        compilations.main {
-            kotlinOptions.jvmTarget = "1.8"
+        jvmToolchain(17)
+        withJava()
+        testRuns.named("test") {
+            executionTask.configure {
+                useJUnitPlatform()
+            }
         }
     }
     js(IR) {
