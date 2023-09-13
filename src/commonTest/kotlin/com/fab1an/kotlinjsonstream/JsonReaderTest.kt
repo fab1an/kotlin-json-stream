@@ -1,6 +1,5 @@
 package com.fab1an.kotlinjsonstream
 
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
