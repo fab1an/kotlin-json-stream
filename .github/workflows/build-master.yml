@@ -58,7 +58,7 @@ jobs:
         run: |
           rm -Rf "./documentation/${{env.VERSION}}"
           mv ./build/dokka/html "./documentation/${{env.VERSION}}"
-          rm -Rf "./documentation/*-SNAPSHOT"
+          rm -Rf ./documentation/*-SNAPSHOT
 
       - name: Commit documentation
         run: |

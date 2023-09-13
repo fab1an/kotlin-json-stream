@@ -54,8 +54,8 @@ tasks.withType(DokkaTask.class) {
     dokkaSourceSets {
         configureEach {
             externalDocumentationLink {
-                url.set(new URL("https://square.github.io/okio/3.x/okio/"))
-                packageListUrl.set(new URL("https://square.github.io/okio/3.x/okio/okio/package-list"))
+                url.set(new URI("https://square.github.io/okio/3.x/okio/"))
+                packageListUrl.set(new URI("https://square.github.io/okio/3.x/okio/okio/package-list"))
             }
         }
 
