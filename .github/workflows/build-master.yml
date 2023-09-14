@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - build/test-deployment-of-versions
 
 permissions:
   contents: write
@@ -24,7 +23,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-java@v3
         with:
@@ -38,39 +37,37 @@ jobs:
       - name: Build documentation
         run: ./gradlew dokkaHtml
 
-      - name: Set env.VERSION from json
-        run: |
-          echo "VERSION=$(cat ./build/dokka/html/version.json | jq -r '.version')" >> "$GITHUB_ENV"
-
       - uses: actions/configure-pages@v3
-        if: ${{ !contains(env.VERSION, '-SNAPSHOT') }}
 
       - uses: actions/upload-pages-artifact@v1
-        if: ${{ !contains(env.VERSION, '-SNAPSHOT') }}
         with:
           path: 'build/dokka/html'
 
-      - uses: actions/deploy-pages@v2
-        if: ${{ !contains(env.VERSION, '-SNAPSHOT') }}
+      - name: Deploy to Documentation GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v1
 
-      - name: Cleanup, archive and commit documenation
-        if: ${{ !contains(env.VERSION, '-SNAPSHOT') }}
+      - name: Delete directory ./build/dokka/html/older
+        run: rm -Rf ./build/dokka/html/older
+
+      - name: Set VERSION from json
         run: |
-          rm -Rf ./build/dokka/html/older
+          echo "VERSION=$(cat ./build/dokka/html/version.json | jq -r '.version')" >> "$GITHUB_ENV"
 
-          # Archive documentation
+      - name: Archive documentation
+        run: |
           rm -Rf "./documentation/${{env.VERSION}}"
           mv ./build/dokka/html "./documentation/${{env.VERSION}}"
           rm -Rf ./documentation/*-SNAPSHOT
 
-          # Commit documentation
-
-          ## setup the username and email
+      - name: Commit documentation
+        run: |
+          # setup the username and email
           git config user.name "GitHub Actions"
           git config user.email "<>"
-
-          ## Stage the file, commit and push
+          
+          # Stage the file, commit and push
           git add documentation
           git commit -m "[ci-commit] [documentation] updated documentation for ${{env.VERSION}}" || true
           git push origin master
+
