@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - build/test-deployment-of-versions
 
 permissions:
   contents: write
