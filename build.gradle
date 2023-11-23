@@ -1,9 +1,9 @@
 import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
-    id 'org.jetbrains.kotlin.multiplatform' version "1.9.10"
+    id 'org.jetbrains.kotlin.multiplatform' version "1.9.20"
     id("convention.publication")
-    id "org.jetbrains.dokka" version "1.8.20"
+    id "org.jetbrains.dokka" version "1.9.10"
 }
 
 group 'com.fab1an'
@@ -35,7 +35,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api "com.squareup.okio:okio:3.5.0"
+                api "com.squareup.okio:okio:3.6.0"
             }
         }
         commonTest {
@@ -47,7 +47,7 @@ kotlin {
 }
 
 dependencies {
-    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.8.20")
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.9.10")
 }
 
 tasks.withType(DokkaTask.class) {
