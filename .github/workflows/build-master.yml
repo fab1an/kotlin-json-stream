@@ -6,7 +6,7 @@ on:
       - master
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -37,37 +37,16 @@ jobs:
       - name: Build documentation
         run: ./gradlew dokkaHtml
 
-      - uses: actions/configure-pages@v3
-
-      - uses: actions/upload-pages-artifact@v1
-        with:
-          path: 'build/dokka/html'
-
-      - name: Deploy to Documentation GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
-
-      - name: Delete directory ./build/dokka/html/older
-        run: rm -Rf ./build/dokka/html/older
-
       - name: Set env.VERSION from dokka version.json
         run: |
           echo "VERSION=$(cat ./build/dokka/html/version.json | jq -r '.version')" >> "$GITHUB_ENV"
 
-      - name: Update documentation for current version in /documentation and delete SNAPSHOT versions
-        run: |
-          rm -Rf "./documentation/${{env.VERSION}}"
-          mv ./build/dokka/html "./documentation/${{env.VERSION}}"
-          rm -Rf ./documentation/*-SNAPSHOT
+      - uses: actions/configure-pages@v3
 
-      - name: Commit documentation
-        run: |
-          # setup the username and email
-          git config user.name "GitHub Actions"
-          git config user.email "<>"
-          
-          # Stage the file, commit and push
-          git add documentation
-          git commit -m "[ci-commit] [documentation] updated documentation for ${{env.VERSION}}" || true
-          git push origin master
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'documentation/${{env.VERSION}}'
 
+      - name: Deploy to Documentation GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

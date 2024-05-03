@@ -74,3 +74,16 @@ tasks.withType(DokkaTask.class) {
             ["org.jetbrains.dokka.versioning.VersioningPlugin": versioningPluginConfiguration]
     )
 }
+
+task buildDocumentation(dependsOn: ['dokkaHtml']) {
+    doLast {
+        delete("${project.rootDir}/documentation/${project.version}")
+        copy {
+            from "${project.buildDir}/dokka/html"
+            into "${project.rootDir}/documentation/${project.version}"
+        }
+        delete("${project.rootDir}/documentation/${project.version}/older")
+    }
+}
+
+build.dependsOn(buildDocumentation)
