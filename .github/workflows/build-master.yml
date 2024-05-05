@@ -35,17 +35,22 @@ jobs:
         run: ./gradlew build
 
       - name: Build documentation
-        run: ./gradlew dokkaHtml
+        run: ./gradlew buildDocumentation
 
-      - name: Set env.VERSION from dokka version.json
+      - name: Check repository for commits
         run: |
-          echo "VERSION=$(cat ./build/dokka/html/version.json | jq -r '.version')" >> "$GITHUB_ENV"
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "there are changes"
+            exit 1
+          else
+            echo "no changes"
+          fi
 
       - uses: actions/configure-pages@v3
 
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: 'documentation/${{env.VERSION}}'
+          path: 'build/dokka/html'
 
       - name: Deploy to Documentation GitHub Pages
         id: deployment

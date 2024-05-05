@@ -77,13 +77,14 @@ tasks.withType(DokkaTask.class) {
 
 task buildDocumentation(dependsOn: ['dokkaHtml']) {
     doLast {
-        delete("${project.rootDir}/documentation/${project.version}")
-        copy {
-            from "${project.buildDir}/dokka/html"
-            into "${project.rootDir}/documentation/${project.version}"
+        if (!project.version.toString().endsWith("-SNAPSHOT")) {
+            delete("${project.rootDir}/documentation/${project.version}")
+            copy {
+                from "${project.buildDir}/dokka/html"
+                into "${project.rootDir}/documentation/${project.version}"
+            }
+            delete("${project.rootDir}/documentation/${project.version}/older")
         }
-        delete("${project.rootDir}/documentation/${project.version}/older")
+        file("${project.rootDir}/documentation/test").createNewFile()
     }
 }
-
-build.dependsOn(buildDocumentation)
