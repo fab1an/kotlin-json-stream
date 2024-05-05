@@ -40,10 +40,8 @@ jobs:
       - name: Check repository for commits
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            echo "there are changes"
+            echo "Build created uncommitted changes in repository"
             exit 1
-          else
-            echo "no changes"
           fi
 
       - uses: actions/configure-pages@v3

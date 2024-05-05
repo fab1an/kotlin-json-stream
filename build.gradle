@@ -85,6 +85,5 @@ task buildDocumentation(dependsOn: ['dokkaHtml']) {
             }
             delete("${project.rootDir}/documentation/${project.version}/older")
         }
-        file("${project.rootDir}/documentation/test").createNewFile()
     }
 }
