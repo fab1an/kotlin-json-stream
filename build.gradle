@@ -23,7 +23,7 @@ kotlin {
     linuxX64()
     linuxArm64()
     jvm {
-        jvmToolchain(17)
+        jvmToolchain(21)
         withJava()
         testRuns.named("test") {
             executionTask.configure {
