@@ -13,7 +13,7 @@ This library is a kotlin-multiplatform streaming JSON-parser. It is based on OKI
 https://fab1an.github.io/kotlin-json-stream/
 
 ### Example
-test
+
 ```kotlin
 fun test() {
     val json = JsonReader("""{"stringProp":"string", "intProp":0}""")
