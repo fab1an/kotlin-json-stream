@@ -3,10 +3,11 @@ name: Build pull request
 on:
   pull_request:
     branches:
-      - 'master'
+      - master
 
 jobs:
   build:
+    name: Build pull request
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
