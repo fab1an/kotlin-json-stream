@@ -48,6 +48,11 @@ kotlin {
                 implementation kotlin("test")
             }
         }
+        jvmTest {
+            dependencies {
+                implementation "com.code-intelligence:jazzer-junit:0.22.1"
+            }
+        }
     }
 }
 
