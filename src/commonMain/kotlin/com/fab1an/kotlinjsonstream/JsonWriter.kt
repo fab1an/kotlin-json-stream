@@ -134,12 +134,13 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
      * Writes [value].
      */
     fun value(value: Double): JsonWriter {
+        check(!value.isInfinite() && !value.isNaN()) {"infinite or NaN numbers are not allowed in json"}
         expectValue()
-        if (value.rem(1) == 0.0) {
-            sink.writeUtf8(value.toInt().toString())
-
+        val strValue = value.toString()
+        if (strValue.endsWith(".0")) {
+            sink.writeUtf8(strValue.substring(0, strValue.lastIndex - 1))
         } else {
-            sink.writeUtf8(value.toString())
+            sink.writeUtf8(strValue)
         }
 
         return this
