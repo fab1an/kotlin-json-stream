@@ -117,4 +117,21 @@ class JsonWriterTest {
             [1]
         """.trimIndent()
     }
+
+    @Test
+    fun writeLargeDouble() {
+        val buffer = Buffer()
+        val double = 1E10
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(double)
+            endArray()
+        }
+
+       JsonReader(buffer.readUtf8()).apply {
+           beginArray()
+           nextDouble() shouldEqual double
+           endArray()
+       }
+    }
 }

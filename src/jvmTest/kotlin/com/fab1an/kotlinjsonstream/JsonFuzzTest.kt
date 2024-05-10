@@ -4,7 +4,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.junit.FuzzTest
 import okio.Buffer
 
-class JsonReaderFuzzTest {
+class JsonFuzzTest {
 
     @FuzzTest
     fun intFuzzing(data: FuzzedDataProvider) {
@@ -20,6 +20,24 @@ class JsonReaderFuzzTest {
         JsonReader(buffer.readUtf8()).apply {
             beginArray()
             nextInt() shouldEqual int
+            endArray()
+        }
+    }
+
+    @FuzzTest
+    fun doubleFuzzing(data: FuzzedDataProvider) {
+        val double = data.consumeDouble()
+
+        val buffer = Buffer()
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(double)
+            endArray()
+        }
+
+        JsonReader(buffer.readUtf8()).apply {
+            beginArray()
+            nextDouble() shouldEqual double
             endArray()
         }
     }
