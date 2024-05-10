@@ -134,6 +134,7 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
      * Writes [value].
      */
     fun value(value: Double): JsonWriter {
+        check(!value.isInfinite() && !value.isNaN()) {"infinite or NaN numbers are not allowed in json"}
         expectValue()
         val strValue = value.toString()
         if (strValue.endsWith(".0")) {

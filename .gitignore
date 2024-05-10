@@ -6,4 +6,4 @@ secring.gpg
 *.swp
 local.properties
 TODO.txt
-
+/.cifuzz-corpus

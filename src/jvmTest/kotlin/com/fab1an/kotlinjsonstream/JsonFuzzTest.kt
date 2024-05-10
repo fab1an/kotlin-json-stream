@@ -27,6 +27,7 @@ class JsonFuzzTest {
     @FuzzTest
     fun doubleFuzzing(data: FuzzedDataProvider) {
         val double = data.consumeDouble()
+        if (double.isNaN() || double.isInfinite()) return
 
         val buffer = Buffer()
         JsonWriter(buffer).apply {
