@@ -2,6 +2,7 @@ package com.fab1an.kotlinjsonstream
 
 import okio.Buffer
 import kotlin.test.Test
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class JsonWriterTest {
@@ -116,5 +117,61 @@ class JsonWriterTest {
         buffer.readUtf8() shouldEqual """
             [1]
         """.trimIndent()
+    }
+
+    @Test
+    fun writeLargeDouble() {
+        val buffer = Buffer()
+        val double = 1E10
+        JsonWriter(buffer).apply {
+            beginArray()
+            value(double)
+            endArray()
+        }
+
+       JsonReader(buffer.readUtf8()).apply {
+           beginArray()
+           nextDouble() shouldEqual double
+           endArray()
+       }
+    }
+
+    @Test
+    fun writeInvalidDoublePosInfinity() {
+        val buffer = Buffer()
+        val double = Double.POSITIVE_INFINITY
+        JsonWriter(buffer).apply {
+            beginArray()
+            assertFails {
+                value(double)
+            }
+            endArray()
+        }
+    }
+
+    @Test
+    fun writeInvalidDoubleNegInfinity() {
+        val buffer = Buffer()
+        val double = Double.NEGATIVE_INFINITY
+        JsonWriter(buffer).apply {
+            beginArray()
+            assertFails {
+                value(double)
+            }
+            endArray()
+        }
+    }
+
+    @Test
+    fun writeInvalidDoubleNan() {
+        val buffer = Buffer()
+        val double = Double.NaN
+        JsonWriter(buffer).apply {
+            beginArray()
+            assertFails {
+                value(double)
+            }
+            endArray()
+        }
     }
 }
