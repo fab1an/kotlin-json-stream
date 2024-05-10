@@ -8,7 +8,6 @@ import com.fab1an.kotlinjsonstream.JsonReader.OpenToken.CONTINUE_OBJECT
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
@@ -29,13 +28,14 @@ class JsonReader(private val source: BufferedSource) {
     )
 
     private val stack = mutableListOf<OpenToken>()
+    private val sharedBuffer = Buffer()
 
     /**
      * Consumes the next token from the JSON stream and asserts that it is the beginning of a new array.
      */
     fun beginArray() {
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
         stack.add(BEGIN_ARRAY)
 
         skipSpecific(BYTESTRING_SQUAREBRACKET_OPEN)
@@ -45,8 +45,8 @@ class JsonReader(private val source: BufferedSource) {
      * Consumes the next token from the JSON stream and asserts that it is the beginning of a new object.
      */
     fun beginObject() {
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
         stack.add(BEGIN_OBJECT)
 
         skipSpecific(BYTESTRING_CURLYBRACKET_OPEN)
@@ -103,8 +103,8 @@ class JsonReader(private val source: BufferedSource) {
      */
     fun nextBoolean(): Boolean {
         expectNotTopLevel()
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
 
         return source.readJsonBoolean()
     }
@@ -118,31 +118,234 @@ class JsonReader(private val source: BufferedSource) {
 
     private fun nextDouble(skipDouble: Boolean): Double? {
         expectNotTopLevel()
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
 
         /* first part value */
-        val nextStop = source.indexOfElement("}], \t\r\n".encodeUtf8())
-        check(nextStop > 0) { "document ended prematurely" }
+        parseDoubleIntoBuffer()
+        val doubleValue = sharedBuffer.readUtf8()
+        sharedBuffer.clear()
+        return if (skipDouble)
+            null
+        else
+            doubleValue.toDouble()
+    }
 
-        val numberText = source.readUtf8(nextStop)
-        when {
-            numberText.startsWith(".") -> throw NumberFormatException("invalid number: '$numberText'")
-            !numberText.all {
-                (it == '.' || it == 'E' || it == 'e' || it == '+' || it == '-' || (it in '0'..'9'))
-            } -> {
-                throw NumberFormatException("invalid number: '$numberText'")
+    /**
+     * See https://www.json.org/json-en.html
+     */
+    private fun parseDoubleIntoBuffer() {
+        check(sharedBuffer.size == 0L) { "sharedBuffer is not empty" }
+
+        var state = 0
+        var finished = false
+        var numberFormatError = false
+
+        while (!finished) {
+            when (state) {
+                0 -> {
+                    /* start of number */
+                    when {
+                        source.nextIs(BYTESTRING_HYPHEN) -> {
+                            state = 1
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_ZERO) -> {
+                            state = 2
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIsAsciiDigitExceptZero() -> {
+                            state = 3
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            numberFormatError = true
+                            finished = true
+                        }
+                    }
+                }
+
+                1 -> {
+                    /* after leading hyphen */
+                    when {
+                        source.nextIs(BYTESTRING_ZERO) -> {
+                            state = 2
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIsAsciiDigitExceptZero() -> {
+                            state = 3
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            numberFormatError = true
+                            finished = true
+                        }
+                    }
+                }
+
+                2 -> {
+                    /* before optional fraction and exponent */
+                    when {
+                        source.nextIs(BYTESTRING_DOT) -> {
+                            state = 4
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_LOWERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_UPPERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            finished = true
+                        }
+                    }
+                }
+
+                3 -> {
+                    /* number before fraction or exponent */
+                    when {
+                        source.nextIsAsciiDigit() -> {
+                            state = 3
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_DOT) -> {
+                            state = 4
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_LOWERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_UPPERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            finished = true
+                        }
+                    }
+                }
+
+                4 -> {
+                    /* number after comma */
+                    when {
+                        source.nextIsAsciiDigit() -> {
+                            state = 5
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            numberFormatError = true
+                            finished = true
+                        }
+                    }
+                }
+
+                5 -> {
+                    /* number after comma */
+                    when {
+                        source.nextIsAsciiDigit() -> {
+                            state = 5
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_LOWERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_UPPERCASE_E) -> {
+                            state = 6
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            finished = true
+                        }
+                    }
+                }
+
+                6 -> {
+                    /* after e or E for exponent */
+                    when {
+                        source.nextIs(BYTESTRING_HYPHEN) -> {
+                            state = 7
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        source.nextIs(BYTESTRING_PLUS) -> {
+                            state = 7
+                            source.skip(1)
+                        }
+
+                        source.nextIsAsciiDigit() -> {
+                            state = 7
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            numberFormatError = true
+                            finished = true
+                        }
+                    }
+                }
+
+                7 -> {
+                    /* number in exponent */
+                    when {
+                        source.nextIsAsciiDigit() -> {
+                            state = 7
+                            source.read(sharedBuffer, 1)
+                        }
+
+                        else -> {
+                            finished = true
+                        }
+                    }
+                }
+            }
+        }
+
+        when (stack.lastOrNull()) {
+            BEGIN_PROPERTY -> error("inside object, call to nextName() expected")
+            BEGIN_OBJECT, CONTINUE_OBJECT -> {
+                if (!source.nextIsWhitespace() && !source.nextIs(BYTESTRING_CURLYBRACKET_CLOSE) && !source.nextIs(
+                        BYTESTRING_COMMA
+                    )
+                ) {
+                    numberFormatError = true
+                }
             }
 
-            numberText.startsWith("-00") -> throw NumberFormatException("invalid number: '$numberText'")
-            numberText.startsWith("00") -> throw NumberFormatException("invalid number: '$numberText'")
-            else -> {
-                val doubleValue = numberText.toDouble()
-                return if (skipDouble)
-                    null
-                else
-                    doubleValue
+            BEGIN_ARRAY, CONTINUE_ARRAY -> {
+                if (!source.nextIsWhitespace() && !source.nextIs(BYTESTRING_SQUAREBRACKET_CLOSE) && !source.nextIs(
+                        BYTESTRING_COMMA
+                    )
+                ) {
+                    numberFormatError = true
+                }
             }
+
+            null -> error("should not happen")
+        }
+
+        if (numberFormatError) {
+            throw NumberFormatException("unexpected next character: '${source.readUtf8CodePoint().toChar()}'")
         }
     }
 
@@ -173,7 +376,7 @@ class JsonReader(private val source: BufferedSource) {
      * Returns the name of the next property, consuming it and asserting that this reader is inside an object.
      */
     private fun nextName(skipName: Boolean): String? {
-        skipWhitespaceAndOptionalComma()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
         check(stack.lastOrNull() == BEGIN_OBJECT) { "stack is ${stack.lastOrNull()}" }
 
         /* opening quote */
@@ -209,8 +412,8 @@ class JsonReader(private val source: BufferedSource) {
      */
     fun nextNull() {
         expectNotTopLevel()
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
 
         skipSpecific(BYTESTRING_NULL)
     }
@@ -224,13 +427,13 @@ class JsonReader(private val source: BufferedSource) {
 
     private fun nextString(skipString: Boolean): String? {
         expectNotTopLevel()
-        skipWhitespaceAndOptionalComma()
-        expectValue()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
 
         /* opening quote */
         skipSpecific(BYTESTRING_DOUBLEQUOTE)
 
-        val buffer: Buffer? = if (skipString) null else Buffer()
+        val buffer: Buffer? = if (skipString) null else sharedBuffer
         while (true) {
 
             /* read until backslash or double quote */
@@ -299,14 +502,17 @@ class JsonReader(private val source: BufferedSource) {
         /* closing quote */
         skipSpecific(BYTESTRING_DOUBLEQUOTE)
 
-        return buffer?.readUtf8()
+        val result = buffer?.readUtf8()
+        buffer?.clear()
+
+        return result
     }
 
     /**
      * Returns the next token without consuming it.
      */
     fun peek(): JsonToken {
-        skipWhitespaceAndOptionalComma()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
 
         return when {
             source.exhausted() -> JsonToken.END_DOCUMENT
@@ -358,7 +564,7 @@ class JsonReader(private val source: BufferedSource) {
         check(stack.isNotEmpty()) { "top-level, call to beginObject() or beginArray() expected" }
     }
 
-    private fun expectValue() {
+    private fun expectValueAndUpdateStack() {
         when (stack.lastOrNull()) {
             BEGIN_OBJECT, CONTINUE_OBJECT -> error("inside object, call to nextName() expected")
             BEGIN_PROPERTY -> {
@@ -372,7 +578,7 @@ class JsonReader(private val source: BufferedSource) {
         }
     }
 
-    private fun skipWhitespaceAndOptionalComma() {
+    private fun skipWhitespaceAndOptionalCommaAndUpdateStack() {
         source.skipWhitespace()
         if (source.nextIs(BYTESTRING_COMMA)) {
             when (stack.lastOrNull()) {
