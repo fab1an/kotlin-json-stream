@@ -30,7 +30,10 @@ internal val BYTESTRING_CURLYBRACKET_CLOSE = ByteString.of('}'.code.toByte())
 internal val BYTESTRING_COLON = ByteString.of(':'.code.toByte())
 internal val BYTESTRING_DOUBLEQUOTE = ByteString.of('"'.code.toByte())
 internal val BYTESTRING_DOT = ByteString.of('.'.code.toByte())
+internal val BYTESTRING_LOWERCASE_E= ByteString.of('e'.code.toByte())
+internal val BYTESTRING_UPPERCASE_E= ByteString.of('E'.code.toByte())
 internal val BYTESTRING_COMMA = ByteString.of(','.code.toByte())
+internal val BYTESTRING_PLUS = ByteString.of('+'.code.toByte())
 internal val BYTESTRING_BACKSLASH = ByteString.of('\\'.code.toByte())
 internal val BYTESTRING_TRUE = "true".encodeUtf8()
 internal val BYTESTRING_FALSE = "false".encodeUtf8()
@@ -82,6 +85,31 @@ internal fun BufferedSource.nextIsAsciiDigit(): Boolean {
         rangeEquals(0, BYTESTRING_SEVEN) -> true
         rangeEquals(0, BYTESTRING_EIGHT) -> true
         rangeEquals(0, BYTESTRING_NINE) -> true
+        else -> false
+    }
+}
+
+internal fun BufferedSource.nextIsAsciiDigitExceptZero(): Boolean {
+    return when {
+        rangeEquals(0, BYTESTRING_ONE) -> true
+        rangeEquals(0, BYTESTRING_TWO) -> true
+        rangeEquals(0, BYTESTRING_THREE) -> true
+        rangeEquals(0, BYTESTRING_FOUR) -> true
+        rangeEquals(0, BYTESTRING_FIVE) -> true
+        rangeEquals(0, BYTESTRING_SIX) -> true
+        rangeEquals(0, BYTESTRING_SEVEN) -> true
+        rangeEquals(0, BYTESTRING_EIGHT) -> true
+        rangeEquals(0, BYTESTRING_NINE) -> true
+        else -> false
+    }
+}
+
+internal fun BufferedSource.nextIsWhitespace(): Boolean {
+    return when {
+        rangeEquals(0, BYTESTRING_TAB) -> true
+        rangeEquals(0, BYTESTRING_CARRIAGERETURN) -> true
+        rangeEquals(0, BYTESTRING_NEWLINE) -> true
+        rangeEquals(0, BYTESTRING_SPACE) -> true
         else -> false
     }
 }
