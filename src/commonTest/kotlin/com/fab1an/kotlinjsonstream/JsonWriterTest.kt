@@ -90,6 +90,29 @@ class JsonWriterTest {
     }
 
     @Test
+    fun escapeName() {
+        val stringWithEscapeSequences = "Escaped: \",\\,/,\b,\u000c,\n,\r,\t,\u0000,\uFFFF"
+
+        val buffer = Buffer()
+        JsonWriter(buffer).apply {
+            beginObject()
+            name(stringWithEscapeSequences)
+            value(0)
+            endObject()
+        }
+
+        val jsonString = buffer.readUtf8()
+        jsonString shouldEqual """{"Escaped: \",\\,\/,\b,\f,\n,\r,\t,${"\u0000"},${"\uFFFF"}":0}"""
+
+        JsonReader(jsonString).apply {
+            beginObject()
+            nextName() shouldEqual stringWithEscapeSequences
+            nextInt() shouldEqual 0
+            endObject()
+        }
+    }
+
+    @Test
     fun writeDoubleZero() {
         val buffer = Buffer()
 
@@ -129,11 +152,11 @@ class JsonWriterTest {
             endArray()
         }
 
-       JsonReader(buffer.readUtf8()).apply {
-           beginArray()
-           nextDouble() shouldEqual double
-           endArray()
-       }
+        JsonReader(buffer.readUtf8()).apply {
+            beginArray()
+            nextDouble() shouldEqual double
+            endArray()
+        }
     }
 
     @Test

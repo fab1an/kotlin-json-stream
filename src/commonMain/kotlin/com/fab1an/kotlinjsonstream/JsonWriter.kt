@@ -105,8 +105,19 @@ class JsonWriter(private val sink: BufferedSink, val prettyPrint: Boolean = fals
             sink.write(BYTESTRING_NEWLINE)
             writeIndent()
         }
+
         sink.write(BYTESTRING_DOUBLEQUOTE)
-        sink.writeUtf8(name)
+        sink.writeUtf8(
+            name
+                .replace("\\", """\\""")
+                .replace("\"", """\"""")
+                .replace("/", """\/""")
+                .replace("\b", """\b""")
+                .replace("\u000c", """\f""")
+                .replace("\n", """\n""")
+                .replace("\r", """\r""")
+                .replace("\t", """\t""")
+        )
         sink.write(BYTESTRING_DOUBLEQUOTE)
         sink.write(BYTESTRING_COLON)
         if (prettyPrint) {
