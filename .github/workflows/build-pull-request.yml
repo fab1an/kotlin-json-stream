@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Build pull request
-    runs-on: macos-12
+    runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
