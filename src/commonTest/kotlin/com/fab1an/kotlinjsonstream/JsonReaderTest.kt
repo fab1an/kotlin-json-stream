@@ -33,13 +33,33 @@ class JsonReaderTest {
     }
 
     @Test
-    fun readExponents() {
+    fun throwOnIntWithExponents() {
+        val json = JsonReader("""[1.0E+2]""")
+
+        json.beginArray()
+        assertFailsWith<NumberFormatException> {
+            json.nextInt()
+        }
+    }
+
+    @Test
+    fun throwOnLongWithExponents() {
+        val json = JsonReader("""[1.0E+2]""")
+
+        json.beginArray()
+        assertFailsWith<NumberFormatException> {
+            json.nextLong()
+        }
+    }
+
+    @Test
+    fun readDoubleWithExponents() {
         val json = JsonReader("""[1.0E+2,1.0e+2,1E+0,1.2E-2]""")
 
         json.beginArray()
-        json.nextInt() shouldEqual 100
-        json.nextInt() shouldEqual 100
-        json.nextInt() shouldEqual 1
+        json.nextDouble() shouldEqual 100.0
+        json.nextDouble() shouldEqual 100.0
+        json.nextDouble() shouldEqual 1.0
         json.nextDouble() shouldEqual 0.012
         json.endArray()
     }
@@ -356,6 +376,18 @@ class JsonReaderTest {
     }
 
     @Test
+    fun escapedName() {
+        val json = JsonReader("""{ "Escaped: \",\\,\/,\b,\f,\n,\r,\t,\u0000,\uFFFF": 0 }""")
+
+        json.apply {
+            beginObject()
+            nextName() shouldEqual "Escaped: \",\\,/,\b,\u000c,\n,\r,\t,\u0000,\uFFFF"
+            nextInt() shouldEqual 0
+            endObject()
+        }
+    }
+
+    @Test
     fun readBackslashesInString() {
         val json = JsonReader(""" { "title": "C:\\PROGRA~1\\" } """)
 
@@ -476,6 +508,38 @@ class JsonReaderTest {
         json.nextInt() shouldEqual 1
         assertFailsWith<IllegalStateException> {
             json.nextInt()
+        }
+    }
+
+    @Test
+    fun unparseableIntegerThatIsTooLarge() {
+        val json = JsonReader("""[92147483647]""")
+        json.apply {
+            beginArray()
+            assertFailsWith<NumberFormatException> {
+                json.nextInt()
+            }
+        }
+    }
+
+    @Test
+    fun unparseableIntegerThatHasFraction() {
+        val json = JsonReader("""[1.0]""")
+        json.apply {
+            beginArray()
+            assertFailsWith<NumberFormatException> {
+                json.nextInt()
+            }
+        }
+    }
+
+    @Test
+    fun readSpecialLong() {
+        val long = 7451037802904629050
+        val json = JsonReader("""[$long]""")
+        json.apply {
+            beginArray()
+            json.nextLong() shouldEqual long
         }
     }
 }

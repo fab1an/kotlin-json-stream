@@ -117,14 +117,10 @@ class JsonReader(private val source: BufferedSource) {
     }
 
     private fun nextDouble(skipDouble: Boolean): Double? {
-        expectNotTopLevel()
-        skipWhitespaceAndOptionalCommaAndUpdateStack()
-        expectValueAndUpdateStack()
-
-        /* first part value */
-        parseDoubleIntoBuffer()
+        parseNumberIntoBuffer()
         val doubleValue = sharedBuffer.readUtf8()
         sharedBuffer.clear()
+
         return if (skipDouble)
             null
         else
@@ -134,7 +130,11 @@ class JsonReader(private val source: BufferedSource) {
     /**
      * See https://www.json.org/json-en.html
      */
-    private fun parseDoubleIntoBuffer() {
+    private fun parseNumberIntoBuffer() {
+        expectNotTopLevel()
+        skipWhitespaceAndOptionalCommaAndUpdateStack()
+        expectValueAndUpdateStack()
+
         check(sharedBuffer.size == 0L) { "sharedBuffer is not empty" }
 
         var state = 0
@@ -353,16 +353,21 @@ class JsonReader(private val source: BufferedSource) {
      * Returns the Int value of the next token, consuming it.
      */
     fun nextInt(): Int {
-        return nextLong().toInt()
+        parseNumberIntoBuffer()
+        val numberValue = sharedBuffer.readUtf8()
+        sharedBuffer.clear()
+
+        return numberValue.toInt()
     }
 
     /**
      * Returns the Long value of the next token, consuming it.
      */
     fun nextLong(): Long {
-        val double = nextDouble()
-        check(double.rem(1) == 0.0) { "number has fraction part: $double" }
-        return double.toLong()
+        parseNumberIntoBuffer()
+        val numberValue = sharedBuffer.readUtf8()
+        sharedBuffer.clear()
+        return numberValue.toLong()
     }
 
     /**
@@ -379,23 +384,12 @@ class JsonReader(private val source: BufferedSource) {
         skipWhitespaceAndOptionalCommaAndUpdateStack()
         check(stack.lastOrNull() == BEGIN_OBJECT) { "stack is ${stack.lastOrNull()}" }
 
-        /* opening quote */
-        skipSpecific(BYTESTRING_DOUBLEQUOTE)
-
-        /* property name */
-        val indexOfEnd = source.indexOf(BYTESTRING_DOUBLEQUOTE)
-        check(indexOfEnd >= 0) { "did not find ending double-quote '\"'" }
-        val name: String? =
-            if (!skipName) {
-                source.readUtf8(indexOfEnd)
-
-            } else {
-                source.skip(indexOfEnd)
-                null
-            }
-
-        /* closing quote */
-        skipSpecific(BYTESTRING_DOUBLEQUOTE)
+        parseStringIntoBuffer(skipName)
+        var name: String? = null
+        if (!skipName) {
+            name = sharedBuffer.readUtf8()
+            sharedBuffer.clear()
+        }
 
         /* whitespace and colon */
         source.skipWhitespace()
@@ -429,6 +423,18 @@ class JsonReader(private val source: BufferedSource) {
         expectNotTopLevel()
         skipWhitespaceAndOptionalCommaAndUpdateStack()
         expectValueAndUpdateStack()
+
+        parseStringIntoBuffer(skipString)
+        var result: String? = null
+        if (!skipString) {
+            result = sharedBuffer.readUtf8()
+            sharedBuffer.clear()
+        }
+
+        return result
+    }
+
+    private fun parseStringIntoBuffer(skipString: Boolean) {
 
         /* opening quote */
         skipSpecific(BYTESTRING_DOUBLEQUOTE)
@@ -501,11 +507,6 @@ class JsonReader(private val source: BufferedSource) {
 
         /* closing quote */
         skipSpecific(BYTESTRING_DOUBLEQUOTE)
-
-        val result = buffer?.readUtf8()
-        buffer?.clear()
-
-        return result
     }
 
     /**
