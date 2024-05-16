@@ -31,4 +31,3 @@ infix fun <T> T.shouldEqual(expected: T) {
     assertEquals(expected, this)
 }
 ```
-
