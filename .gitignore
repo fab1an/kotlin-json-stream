@@ -7,4 +7,4 @@ secring.gpg
 local.properties
 TODO.txt
 /.cifuzz-corpus
-/.kotlin
+.kotlin
