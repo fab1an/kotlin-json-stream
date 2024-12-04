@@ -1,9 +1,10 @@
 # Kotlin Json Stream - Kotlin-Multiplatform JSON stream serialization
 
-![maven central version](https://img.shields.io/maven-central/v/com.fab1an/kotlin-json-stream)
+[![maven central version](https://img.shields.io/maven-central/v/com.fab1an/kotlin-json-stream)](https://mvnrepository.com/artifact/com.fab1an/kotlin-json-stream)
 [![semver](https://img.shields.io/:semver-%E2%9C%93-brightgreen.svg)](http://semver.org/)
-![license](https://img.shields.io/github/license/fab1an/kotlin-json-stream)
-![build status](https://github.com/fab1an/kotlin-json-stream/actions/workflows/build-master.yml/badge.svg)
+[![license](https://img.shields.io/github/license/fab1an/kotlin-json-stream)](https://github.com/fab1an/kotlin-json-stream/blob/master/LICENSE)
+[![build status](https://github.com/fab1an/kotlin-json-stream/actions/workflows/build-master.yml/badge.svg)](https://github.com/fab1an/kotlin-json-stream/actions/workflows/build-master.yml)
+[![OpenSSF ScoreCard](https://img.shields.io/ossf-scorecard/github.com/fab1an/kotlin-json-stream)](https://scorecard.dev/)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8911/badge)](https://www.bestpractices.dev/projects/8911)
 
 ## Dokumentation
