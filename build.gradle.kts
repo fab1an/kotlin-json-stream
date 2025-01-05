@@ -62,7 +62,7 @@ kotlin {
 }
 
 dependencies {
-    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.9.20")
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.0.0")
 }
 
 tasks.withType<DokkaTask> {
