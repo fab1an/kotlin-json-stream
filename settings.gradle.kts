@@ -1,2 +1,1 @@
 rootProject.name = "kotlin-json-stream"
-includeBuild("convention-plugins")
