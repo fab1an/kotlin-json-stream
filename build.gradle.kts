@@ -1,10 +1,9 @@
-import org.jetbrains.dokka.gradle.DokkaTask
-import java.net.URL
+import java.net.URI
 
 plugins {
     id("org.jetbrains.kotlin.multiplatform").version("2.1.0")
     id("publishing-conventions")
-    id("org.jetbrains.dokka").version("1.9.20")
+    id("org.jetbrains.dokka").version("2.0.0")
 }
 
 group = "com.fab1an"
@@ -62,29 +61,30 @@ kotlin {
 }
 
 dependencies {
-    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.9.20")
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.0.0")
 }
 
-tasks.withType<DokkaTask> {
+dokka {
     dokkaSourceSets {
-        configureEach {
-            externalDocumentationLink {
-                url.set(URL("https://square.github.io/okio/3.x/okio/"))
-                packageListUrl.set(URL("https://square.github.io/okio/3.x/okio/okio/package-list"))
+        commonMain {
+            externalDocumentationLinks {
+                register("okio") {
+                    url.set(URI("https://square.github.io/okio/3.x/okio/"))
+                    packageListUrl.set(URI("https://square.github.io/okio/3.x/okio/okio/package-list"))
+                }
             }
         }
     }
-    pluginsMapConfiguration.set(mapOf(
-        "org.jetbrains.dokka.versioning.VersioningPlugin" to """
-        {
-          "olderVersionsDir": "${projectDir.toPath().resolve("documentation")}"
-        }
-        """
-    ))
+}
+
+tasks.dokkaGeneratePublicationHtml {
+    dokka.pluginsConfiguration.versioning {
+        olderVersionsDir = projectDir.resolve("documentation")
+    }
 }
 
 tasks.register<DefaultTask>("buildDocumentation") {
-    dependsOn("dokkaHtml")
+    dependsOn("dokkaGenerate")
     doLast {
         if (!project.version.toString().endsWith("-SNAPSHOT")) {
             delete("documentation/${project.version}")
