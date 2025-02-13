@@ -1,14 +1,12 @@
 package com.fab1an.kotlinjsonstream
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.junit.FuzzTest
 import okio.Buffer
 
 class JsonFuzzTest {
 
     @FuzzTest
-    fun intFuzzing(data: FuzzedDataProvider) {
-        val int = data.consumeInt()
+    fun intFuzzing(int: Int) {
 
         val buffer = Buffer()
         JsonWriter(buffer).apply {
@@ -25,8 +23,7 @@ class JsonFuzzTest {
     }
 
     @FuzzTest
-    fun doubleFuzzing(data: FuzzedDataProvider) {
-        val double = data.consumeDouble()
+    fun doubleFuzzing(double: Double) {
         if (double.isNaN() || double.isInfinite()) return
 
         val buffer = Buffer()
@@ -44,9 +41,7 @@ class JsonFuzzTest {
     }
 
     @FuzzTest
-    fun longFuzzing(data: FuzzedDataProvider) {
-        val long = data.consumeLong()
-
+    fun longFuzzing(long: Long) {
         val buffer = Buffer()
         JsonWriter(buffer).apply {
             beginArray()
@@ -62,8 +57,8 @@ class JsonFuzzTest {
     }
 
     @FuzzTest
-    fun stringFuzzing(data: FuzzedDataProvider) {
-        val text = data.consumeRemainingAsString()
+    fun stringFuzzing(text: String?) {
+        if (text == null) return
 
         val buffer = Buffer()
         JsonWriter(buffer).apply {
@@ -80,8 +75,8 @@ class JsonFuzzTest {
     }
 
     @FuzzTest
-    fun nameFuzzing(data: FuzzedDataProvider) {
-        val text = data.consumeRemainingAsString()
+    fun nameFuzzing(text: String?) {
+        if (text == null) return
 
         val buffer = Buffer()
         JsonWriter(buffer).apply {
