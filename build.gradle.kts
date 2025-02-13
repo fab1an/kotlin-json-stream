@@ -54,7 +54,7 @@ kotlin {
         }
         jvmTest {
             dependencies {
-                implementation("com.code-intelligence:jazzer-junit:0.22.1")
+                implementation("com.code-intelligence:jazzer-junit:0.24.0")
             }
         }
     }
