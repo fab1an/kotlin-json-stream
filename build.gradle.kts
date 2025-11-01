@@ -3,7 +3,7 @@ import java.net.URI
 plugins {
     id("org.jetbrains.kotlin.multiplatform").version("2.1.10")
     id("publishing-conventions")
-    id("org.jetbrains.dokka").version("2.0.0")
+    id("org.jetbrains.dokka").version("2.1.0")
 }
 
 group = "com.fab1an"
@@ -61,7 +61,7 @@ kotlin {
 }
 
 dependencies {
-    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.0.0")
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.1.0")
 }
 
 dokka {
