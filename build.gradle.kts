@@ -44,7 +44,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api("com.squareup.okio:okio:3.10.2")
+                api("com.squareup.okio:okio:3.16.2")
             }
         }
         commonTest {
