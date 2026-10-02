@@ -34,7 +34,7 @@ kotlin {
     }
 
     compilerOptions {
-        jvmToolchain(26)
+        jvmToolchain(27)
     }
 
     applyDefaultHierarchyTemplate()
