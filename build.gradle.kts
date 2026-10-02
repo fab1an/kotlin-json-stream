@@ -1,9 +1,9 @@
 import java.net.URI
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform").version("2.1.10")
+    id("org.jetbrains.kotlin.multiplatform").version("2.4.20")
     id("publishing-conventions")
-    id("org.jetbrains.dokka").version("2.0.0")
+    id("org.jetbrains.dokka").version("2.2.0")
 }
 
 group = "com.fab1an"
@@ -19,24 +19,22 @@ kotlin {
     iosX64()
     iosSimulatorArm64()
     macosArm64()
-    macosX64()
     linuxX64()
     linuxArm64()
     jvm {
-        withJava()
         testRuns.named("test") {
             executionTask.configure {
                 useJUnitPlatform()
             }
         }
     }
-    js(IR) {
+    js {
         nodejs()
         binaries.library()
     }
 
     compilerOptions {
-        jvmToolchain(21)
+        jvmToolchain(27)
     }
 
     applyDefaultHierarchyTemplate()
@@ -44,7 +42,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api("com.squareup.okio:okio:3.10.2")
+                api("com.squareup.okio:okio:3.18.2")
             }
         }
         commonTest {
@@ -61,7 +59,7 @@ kotlin {
 }
 
 dependencies {
-    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.0.0")
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:2.2.0")
 }
 
 dokka {
