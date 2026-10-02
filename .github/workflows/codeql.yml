@@ -97,7 +97,7 @@ jobs:
 
     - if: matrix.build-mode == 'manual'
       shell: bash
-      run: gradlew build
+      run: ./gradlew build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
